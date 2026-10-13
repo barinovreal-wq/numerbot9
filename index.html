@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0a1128">
+<title>Цифровая диагностика личности</title>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Slab:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --gold:#7eb8da;
+  --gold-light:#c5d9f0;
+  --gold-dark:#2a4a7a;
+  --maroon:#1a2a5e;
+  --maroon-deep:#0a1128;
+  --saffron:#b8a9e8;
+  --cream:#e8eef8;
+  --accent:#8b9dc3;
+  --purple:#6b4c9a;
+  --purple-light:#9b7fd4;
+  --blue:#4a7ec7;
+  --blue-light:#7eb8da;
+  --sky:#a8d0f0;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+html,body{
+  background:var(--maroon-deep);
+  color:var(--cream);
+  font-family:Roboto,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  min-height:100vh;
+  overscroll-behavior-y:none;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 20% 10%,rgba(126,184,218,.10),transparent 40%),
+    radial-gradient(circle at 80% 80%,rgba(107,76,154,.08),transparent 45%),
+    repeating-conic-gradient(from 0deg at 50% 50%,rgba(126,184,218,.035) 0deg 15deg,transparent 15deg 30deg);
+}
+
+.app{
+  position:relative;z-index:1;
+  max-width:520px;margin:0 auto;
+  padding:calc(20px + env(safe-area-inset-top)) 14px calc(100px + env(safe-area-inset-bottom));
+}
+
+/* ——— Header ——— */
+header{text-align:center;padding:8px 0 4px}
+h1{
+  font-family:'Roboto Slab',Georgia,serif;
+  font-weight:700;font-size:22px;letter-spacing:1.5px;
+  text-transform:uppercase;line-height:1.25;
+}
+h1 .h1-line-1{color:var(--blue-light)}
+h1 .h1-line-2{color:var(--gold-light)}
+
+.divider{
+  position:relative;display:flex;align-items:center;justify-content:center;
+  height:1px;margin:18px 0 22px;
+}
+.divider::before,.divider::after{
+  content:'';flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,var(--blue-light),transparent);
+}
+.divider span{
+  color:var(--blue-light);font-size:12px;background:var(--maroon-deep);
+  padding:0 10px;position:relative;top:-1px;
+}
+
+/* ——— Form ——— */
+.form-card{
+  position:relative;
+  background:linear-gradient(145deg,rgba(26,42,94,.9),rgba(10,17,40,.95));
+  border:1px solid var(--gold-dark);border-radius:14px;
+  padding:22px 18px;margin-bottom:22px;
+  box-shadow:0 2px 16px rgba(0,0,0,.35);
+}
+.form-card::before{
+  content:'';position:absolute;inset:5px;
+  border:1px solid rgba(126,184,218,.2);border-radius:9px;pointer-events:none;
+}
+.form-card label{
+  display:block;font-family:'Roboto Slab',serif;font-weight:600;font-size:12px;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--blue-light);margin-bottom:8px;
+}
+.form-card input{
+  width:100%;background:rgba(0,0,0,.35);
+  border:1px solid rgba(126,184,218,.35);border-radius:8px;
+  padding:12px 14px;color:var(--cream);font-family:'Roboto Slab',serif;
+  font-size:20px;font-weight:700;letter-spacing:2px;text-align:center;
+  margin-bottom:16px;outline:none;
+  transition:border-color .25s,box-shadow .25s;
+  -webkit-appearance:none;appearance:none;
+}
+.form-card input::placeholder{color:rgba(197,217,240,.35);letter-spacing:2px;font-weight:400}
+.form-card input:focus{
+  border-color:var(--blue-light);
+  box-shadow:0 0 0 3px rgba(126,184,218,.15);
+  background:rgba(0,0,0,.45);
+}
+
+/* ——— Buttons ——— */
+.btn{
+  display:block;width:100%;
+  background:linear-gradient(135deg,var(--gold-dark),var(--blue),var(--purple));
+  color:var(--cream);border:0;border-radius:12px;
+  padding:14px;font-family:'Roboto Slab',serif;
+  font-weight:700;font-size:15px;text-transform:uppercase;letter-spacing:2px;
+  cursor:pointer;
+  transition:filter .2s ease,transform .15s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.btn:hover{filter:brightness(1.12)}
+.btn:active{transform:scale(.98)}
+
+/* ——— Loading ——— */
+.loading{
+  display:none;text-align:center;padding:40px 0;
+  font-family:'Roboto Slab',serif;font-weight:500;color:var(--blue-light);
+  letter-spacing:2px;font-size:13px;text-transform:uppercase;
+}
+.loading.show{display:block}
+.spinner{
+  width:40px;height:40px;border:3px solid rgba(126,184,218,.2);
+  border-top-color:var(--blue-light);border-radius:50%;
+  margin:0 auto 14px;animation:spin .8s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes resetIn{
+  from{opacity:0;transform:translateX(-50%) translateY(20px)}
+  to{opacity:1;transform:translateX(-50%) translateY(0)}
+}
+
+/* ——— Results container ——— */
+#c-result{display:none}
+#c-result.show{display:block;animation:fadeIn .5s ease}
+
+/* ——— Extra numbers block ——— */
+.extra-block{
+  background:linear-gradient(145deg,rgba(26,42,94,.85),rgba(10,17,40,.9));
+  border:1px solid var(--gold-dark);border-radius:14px;
+  padding:16px 14px;margin-bottom:16px;text-align:center;
+  box-shadow:0 2px 16px rgba(0,0,0,.35);
+}
+.extra-block .label{
+  font-family:'Roboto Slab',serif;font-weight:600;font-size:10px;
+  letter-spacing:1.8px;text-transform:uppercase;color:var(--blue-light);
+  margin-bottom:8px;
+}
+.extra-block .digits{
+  font-family:'Roboto Slab',serif;font-weight:700;font-size:20px;
+  color:var(--sky);letter-spacing:2px;
+  text-shadow:0 0 15px rgba(126,184,218,.5);
+}
+
+/* ——— Matrix ——— */
+.matrix-wrap{
+  background:linear-gradient(145deg,rgba(26,42,94,.85),rgba(10,17,40,.9));
+  border:1px solid var(--gold-dark);border-radius:14px;
+  padding:12px 10px;margin-bottom:16px;
+  box-shadow:0 2px 16px rgba(0,0,0,.35);
+}
+.matrix{
+  border-collapse:separate;border-spacing:5px;width:100%;
+  background:transparent;
+}
+.matrix td{
+  border:1px solid rgba(126,184,218,.2);
+  padding:14px 4px;text-align:center;vertical-align:middle;
+  background:rgba(0,0,0,.3);
+  min-width:44px;border-radius:6px;
+  transition:background .2s,border-color .2s;
+}
+.matrix td.empty{background:rgba(0,0,0,.15);border-color:rgba(126,184,218,.1)}
+.matrix .digit{
+  font-family:'Roboto Slab',serif;font-size:20px;font-weight:700;
+  color:var(--sky);display:block;line-height:1.3;
+  letter-spacing:2px;word-break:break-all;
+  text-shadow:0 0 10px rgba(126,184,218,.4);
+}
+.matrix .label{
+  font-family:Roboto,sans-serif;font-size:10px;font-weight:500;
+  color:var(--blue-light);display:block;margin-top:4px;
+  letter-spacing:.5px;text-transform:uppercase;
+}
+.matrix td.empty .digit{color:rgba(126,184,218,.25);text-shadow:none}
+
+/* ——— Sections ——— */
+.section{
+  background:linear-gradient(160deg,rgba(26,42,94,.85),rgba(10,17,40,.9));
+  border:1px solid var(--gold-dark);border-radius:14px;
+  margin-bottom:16px;overflow:hidden;
+  box-shadow:0 2px 16px rgba(0,0,0,.35);
+}
+.section-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 18px;
+  background:linear-gradient(90deg,rgba(126,184,218,.12),transparent);
+  border-bottom:1px solid rgba(126,184,218,.2);
+  cursor:pointer;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.section-header h2{
+  font-family:'Roboto Slab',serif;font-weight:600;font-size:15px;
+  text-transform:uppercase;letter-spacing:1px;color:var(--gold-light);
+  line-height:1.35;
+}
+.section-header .chev{
+  font-size:14px;color:var(--blue-light);transition:transform .3s ease;
+  flex-shrink:0;margin-left:10px;
+}
+.section.open .section-header .chev{transform:rotate(180deg)}
+.section-body{
+  max-height:0;overflow:hidden;transition:max-height .5s ease;
+}
+.section.open .section-body{max-height:60000px}
+.section-inner{padding:16px 18px 20px}
+.section-inner p{
+  font-family:Roboto,sans-serif;font-weight:400;font-size:15px;
+  line-height:1.75;color:var(--cream);margin-bottom:14px;
+}
+.section-inner p:last-child{margin-bottom:0}
+.section-inner strong{
+  font-family:'Roboto Slab',serif;font-weight:600;color:var(--gold-light);
+}
+
+/* ——— Toggle button (Подробнее) ——— */
+.toggle-btn{
+  display:inline-block;
+  background:rgba(126,184,218,.12);
+  border:1px solid rgba(126,184,218,.4);
+  border-radius:20px;padding:7px 16px;
+  font-family:'Roboto Slab',serif;font-weight:600;font-size:12px;
+  color:var(--gold-light);letter-spacing:1.2px;text-transform:uppercase;
+  cursor:pointer;margin-top:4px;
+  transition:background .2s ease,border-color .2s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.toggle-btn:hover{background:rgba(126,184,218,.22);border-color:var(--blue-light)}
+.full-desc{
+  display:none;margin-top:14px;padding-top:14px;
+  border-top:1px solid rgba(126,184,218,.2);
+}
+.full-desc.open{display:block;animation:fadeIn .3s ease}
+
+/* ——— Partial note ——— */
+.partial-note{
+  background:linear-gradient(160deg,rgba(26,42,94,.85),rgba(10,17,40,.9));
+  border:1px solid var(--gold-dark);border-radius:14px;
+  padding:18px 18px;margin-top:16px;
+  box-shadow:0 2px 16px rgba(0,0,0,.35);
+  display:none;
+}
+.partial-note.show{display:block;animation:fadeIn .5s ease}
+.partial-note p{
+  font-family:Roboto,sans-serif;font-size:14px;line-height:1.7;
+  color:var(--cream);margin-bottom:10px;
+}
+.partial-note p:last-child{margin-bottom:0}
+.partial-note p.highlight-purple{
+  color:var(--purple-light);font-weight:500;
+  padding-top:10px;border-top:1px solid rgba(126,184,218,.2);
+}
+
+/* ——— Section titles ——— */
+.section-title{
+  font-family:'Roboto Slab',serif;font-weight:700;font-size:20px;
+  color:var(--gold-light);text-transform:uppercase;letter-spacing:1.5px;
+  text-align:center;margin:30px 0 18px;line-height:1.3;
+}
+.section-title span{color:var(--blue-light)}
+
+/* ——— Consultation cards ——— */
+.consult-card{
+  background:linear-gradient(160deg,rgba(26,42,94,.85),rgba(10,17,40,.9));
+  border:1px solid var(--gold-dark);border-radius:14px;
+  margin-bottom:14px;overflow:hidden;
+  box-shadow:0 2px 16px rgba(0,0,0,.35);
+}
+.consult-card:last-child{margin-bottom:0}
+.consult-head{
+  padding:18px 18px;cursor:pointer;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.consult-top{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  gap:12px;margin-bottom:10px;
+}
+.consult-name{
+  font-family:'Roboto Slab',serif;font-weight:600;font-size:15px;
+  color:var(--gold-light);letter-spacing:.5px;line-height:1.35;
+  flex:1;min-width:0;
+}
+.consult-price{
+  font-family:'Roboto Slab',serif;font-weight:700;font-size:16px;
+  color:var(--blue-light);white-space:nowrap;letter-spacing:.5px;
+  flex-shrink:0;
+}
+.consult-short{
+  font-family:Roboto,sans-serif;font-size:13px;line-height:1.6;
+  color:rgba(232,238,248,.85);margin-bottom:10px;
+}
+.consult-toggle{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:'Roboto Slab',serif;font-size:12px;font-weight:600;
+  color:var(--blue-light);text-transform:uppercase;letter-spacing:1.2px;
+}
+.consult-toggle .arrow{font-size:10px;transition:transform .3s ease;display:inline-block}
+.consult-card.open .consult-toggle .arrow{transform:rotate(180deg)}
+.consult-body{
+  display:none;padding:16px 18px 20px;
+  border-top:1px solid rgba(126,184,218,.2);
+}
+.consult-card.open .consult-body{display:block;animation:fadeIn .35s ease}
+.consult-body p{
+  font-family:Roboto,sans-serif;font-size:14px;line-height:1.7;
+  color:var(--cream);margin:12px 0 0 0;
+}
+.consult-body p:first-child{margin-top:0}
+.consult-body .stage-title{
+  font-family:'Roboto Slab',serif;font-weight:600;font-size:13px;
+  color:var(--blue-light);text-transform:uppercase;letter-spacing:1px;
+  margin:18px 0 6px 0;
+}
+.consult-body .stage-title:first-child{margin-top:0}
+.consult-body ul{
+  list-style:none;padding:0;margin:8px 0 0 0;
+}
+.consult-body ul li{
+  font-family:Roboto,sans-serif;font-size:14px;line-height:1.7;
+  color:var(--cream);margin-bottom:8px;padding-left:20px;position:relative;
+}
+.consult-body ul li::before{
+  content:"—";position:absolute;left:0;top:0;color:var(--blue-light);
+}
+.consult-body ul li:last-child{margin-bottom:0}
+.consult-body ul li strong{
+  font-family:'Roboto Slab',serif;font-weight:600;color:var(--gold-light);
+}
+.consult-note{
+  margin-top:16px;padding-top:14px;
+  border-top:1px solid rgba(126,184,218,.2);
+  font-family:Roboto,sans-serif;font-size:13px;line-height:1.7;
+  color:rgba(232,238,248,.85);
+}
+.consult-note strong{
+  font-family:'Roboto Slab',serif;color:var(--gold-light);font-weight:600;
+}
+
+/* ——— FAQ ——— */
+.faq-item{
+  background:linear-gradient(160deg,rgba(26,42,94,.85),rgba(10,17,40,.9));
+  border:1px solid var(--gold-dark);border-radius:14px;
+  margin-bottom:12px;overflow:hidden;
+  box-shadow:0 2px 16px rgba(0,0,0,.35);
+}
+.faq-item:last-child{margin-bottom:0}
+.faq-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  width:100%;padding:16px 18px;
+  background:linear-gradient(90deg,rgba(126,184,218,.12),transparent);
+  border:none;cursor:pointer;text-align:left;
+  font-family:'Roboto Slab',serif;font-size:14px;font-weight:600;
+  color:var(--gold-light);letter-spacing:.5px;line-height:1.4;
+  -webkit-tap-highlight-color:transparent;
+}
+.faq-head .faq-q{flex:1;min-width:0}
+.faq-head .faq-icon{
+  flex-shrink:0;width:26px;height:26px;border-radius:50%;
+  background:rgba(126,184,218,.15);
+  border:1px solid rgba(126,184,218,.4);
+  color:var(--gold-light);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Roboto Slab',serif;font-size:15px;font-weight:700;
+  line-height:1;
+  transition:transform .25s ease,background .25s ease,color .25s ease;
+}
+.faq-item.open .faq-icon{
+  background:var(--blue-light);color:var(--maroon-deep);
+  border-color:var(--blue-light);
+  transform:rotate(45deg);
+}
+.faq-body{
+  display:none;padding:0 18px 18px;
+  border-top:1px solid rgba(126,184,218,.2);
+}
+.faq-item.open .faq-body{display:block;animation:fadeIn .3s ease}
+.faq-body p{
+  font-family:Roboto,sans-serif;font-size:14px;line-height:1.7;
+  color:var(--cream);margin:12px 0 0 0;
+}
+.faq-body p:first-child{margin-top:14px}
+.faq-body p strong{
+  font-family:'Roboto Slab',serif;color:var(--gold-light);font-weight:600;
+}
+.faq-body a{
+  color:var(--sky);text-decoration:none;font-weight:600;
+  border-bottom:1px solid rgba(168,208,240,.4);
+  transition:color .2s ease,border-color .2s ease;
+  word-break:break-word;
+}
+.faq-body a:hover{color:var(--purple-light);border-bottom-color:var(--purple-light)}
+
+/* ——— Reset button ——— */
+.reset-btn{
+  position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));
+  left:50%;transform:translateX(-50%);z-index:50;
+  padding:14px 30px;
+  background:linear-gradient(135deg,var(--gold-dark),var(--blue),var(--purple));
+  color:var(--cream);border:0;border-radius:12px;
+  font-family:'Roboto Slab',serif;font-weight:700;font-size:15px;
+  text-transform:uppercase;letter-spacing:2px;cursor:pointer;
+  display:none;
+  transition:filter .2s ease,transform .15s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.reset-btn.show{display:block;animation:resetIn .4s ease}
+.reset-btn:hover{filter:brightness(1.12)}
+.reset-btn:active{transform:translateX(-50%) scale(.98)}
+
+/* ——— Adaptive ——— */
+@media (max-width:400px){
+  h1{font-size:19px}
+  .section-title{font-size:18px}
+  .extra-block .digits{font-size:18px}
+  .form-card input{font-size:18px}
+  .matrix td{padding:12px 3px;min-width:38px}
+  .matrix .digit{font-size:18px}
+  .matrix .label{font-size:9px}
+  .section-header h2{font-size:13px}
+  .section-header{padding:12px 14px}
+  .section-inner{padding:14px 14px 18px}
+  .consult-head{padding:16px 14px}
+  .consult-body{padding:14px 14px 18px}
+  .faq-head{padding:14px 14px;font-size:13px}
+  .faq-body{padding:0 14px 16px}
+  .btn,.reset-btn{font-size:14px;padding:13px}
+}
+@media (max-width:340px){
+  h1{font-size:17px}
+  .form-card input{font-size:16px;letter-spacing:1.5px}
+  .matrix .digit{font-size:16px}
+  .matrix td{padding:10px 2px;min-width:34px}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <h1>
+      <span class="h1-line-1">Цифровая</span><br>
+      <span class="h1-line-2">диагностика личности</span>
+    </h1>
+  </header>
+
+  <div class="divider"><span>❖</span></div>
+
+  <div class="form-card">
+    <label for="c-date">Дата рождения</label>
+    <input type="text" id="c-date" placeholder="ДД.ММ.ГГГГ" value="14.06.1992" maxlength="10" inputmode="numeric" autocomplete="off">
+    <button class="btn" id="c-calc-btn" type="button">Рассчитать</button>
+  </div>
+
+  <div class="loading" id="c-loading"><div class="spinner"></div>Расчёт матрицы…</div>
+
+  <div id="c-result">
+    <div class="extra-block">
+      <div class="label">Дополнительные числа</div>
+      <div class="digits" id="c-extra-digits">—</div>
+    </div>
+
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <tr>
+          <td id="c-1"><span class="digit">—</span><span class="label">Характер</span></td>
+          <td id="c-4"><span class="digit">—</span><span class="label">Здоровье</span></td>
+          <td id="c-7"><span class="digit">—</span><span class="label">Удача</span></td>
+        </tr>
+        <tr>
+          <td id="c-2"><span class="digit">—</span><span class="label">Энергия</span></td>
+          <td id="c-5"><span class="digit">—</span><span class="label">Логика</span></td>
+          <td id="c-8"><span class="digit">—</span><span class="label">Долг</span></td>
+        </tr>
+        <tr>
+          <td id="c-3"><span class="digit">—</span><span class="label">Интерес</span></td>
+          <td id="c-6"><span class="digit">—</span><span class="label">Труд</span></td>
+          <td id="c-9"><span class="digit">—</span><span class="label">Память</span></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="section open" id="c-ones-block">
+      <div class="section-header">
+        <h2 id="c-ones-digits">Характер</h2>
+        <span class="chev">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="section-inner" id="c-ones-text"></div>
+      </div>
+    </div>
+
+    <div class="section open" id="c-twos-block">
+      <div class="section-header">
+        <h2 id="c-twos-digits">Энергия</h2>
+        <span class="chev">▼</span>
+      </div>
+      <div class="section-body">
+        <div class="section-inner" id="c-twos-text"></div>
+      </div>
+    </div>
+
+    <div class="partial-note" id="c-partial-note">
+      <p>Это краткий анализ двух ключевых позиций: характера и энергии. Это фундамент, с которого всё начинается.</p>
+      <p>Ответы на все вопросы хранятся в деталях!</p>
+      <p class="highlight-purple">Полный анализ психоматрицы с использованием дополнительных инструментов цифрового психоанализа – это то, что превращает цифры в конкретные инструкции.</p>
+    </div>
+  </div>
+
+  <div class="section-title"><span>Форматы</span> консультаций</div>
+
+  <div class="consult-card" data-consult>
+    <div class="consult-head">
+      <div class="consult-top">
+        <div class="consult-name">Индивидуальная консультация</div>
+        <div class="consult-price">3.000 ₽</div>
+      </div>
+      <p class="consult-short">Анализ личности, позволяющий увидеть свои ресурсы и уязвимости, получить ответы на многие вопросы.</p>
+      <span class="consult-toggle">Подробнее <span class="arrow">▼</span></span>
+    </div>
+    <div class="consult-body">
+      <p>Эта консультация – не предсказание и не гадание. Это структурный математический анализ вашей даты рождения, который позволяет увидеть вашу природу: сильные стороны, уязвимости, внутренние конфликты и способы их гармонизации.</p>
+      <p>Вы получите не абстрактные описания, а конкретную карту вашей личности с пониманием, куда направлять усилия, а где лучше остановиться. Консультация строится поэтапно, от общего к частному, от базовых показателей к их динамике и взаимодействию.</p>
+
+      <div class="stage-title">Этап 1. Анализ психоматрицы.</div>
+      <p>Подробный разбор всех цифровых ячеек. Психоматрица – это таблица 3×3, в которую вносятся все цифры из вашей даты рождения и дополнительного расчёта. Каждая ячейка отвечает за конкретное качество.</p>
+
+      <div class="stage-title">Этап 2. Анализ всех линий психоматрицы.</div>
+      <p>Каждая линия (строка, столбец, диагональ) объединяет три цифры и даёт качество более высокого уровня. Мы разбираем их в двух проявлениях:</p>
+      <ul>
+        <li><strong>Как ресурс</strong> – где эта линия даёт вам силу, помогает достигать целей, строить отношения, зарабатывать.</li>
+        <li><strong>Как ловушка</strong> – где эта линия может привести к перегрузке, конфликтам, зацикленности.</li>
+      </ul>
+
+      <div class="stage-title">Этап 3. Переходы цифр – динамика вашей психоматрицы.</div>
+      <p>Психоматрица не статична. В зависимости от ваших решений, привычек и образа жизни цифры могут переходить друг в друга. Это ключевой механизм, который объясняет, почему люди с одинаковыми датами рождения живут по-разному.</p>
+
+      <div class="stage-title">Этап 4. Анализ типов мышления.</div>
+      <p>Это отдельный математический расчёт, который показывает, как вы мыслите в текущий период жизни и как будете мыслить в ближайшие годы. Мы определяем ваш базовый тип мышления и его изменения. Это позволяет понять:</p>
+      <ul>
+        <li>Когда вам лучше систематизировать и упорядочивать, а не придумывать новое.</li>
+        <li>Когда эффективнее копировать успешные модели, а не тратить силы на изобретение велосипеда.</li>
+        <li>Когда наступает время создавать собственные решения и не следовать шаблонам.</li>
+        <li>Когда приходит период поиска нового и отказа от привычного.</li>
+      </ul>
+      <p>Знание своего типа мышления в конкретный период жизни позволяет действовать в потоке, а не против своей природы. Вы перестаёте «топтаться на месте» и начинаете использовать свои мыслительные способности с максимальной эффективностью.</p>
+
+      <div class="stage-title">Дополнительные опции (по желанию).</div>
+      <p>В рамках консультации вы можете запросить дополнительные разборы:</p>
+      <ul>
+        <li><strong>Анализ даты ключевого события</strong> – запуск проекта, переезд, подписание договора, начало обучения. Я покажу, как эта дата соотносится с вашей психоматрицей и какие нюансы стоит учесть.</li>
+        <li><strong>Анализ эмоций по китайской схеме У-Син</strong> – глубокая диагностика вашего эмоционального состояния и его связи с органами.</li>
+        <li><strong>Подбор имени для новорождённого</strong> – расчёт имени, которое гармонично дополнит дату рождения ребёнка (требуется дата рождения малыша).</li>
+      </ul>
+
+      <div class="stage-title">Итог консультации.</div>
+      <p>Вы получите:</p>
+      <ul>
+        <li><strong>Аудиозапись разбора</strong> (60–90 минут) – я провожу вас через все этапы анализа последовательно, с подробными пояснениями и выводами. В аудиоформате нет спешки, я раскрываю каждый блок максимально глубоко, чтобы вы могли прочувствовать и осмыслить информацию.</li>
+        <li><strong>Возможность перейти к диалогу после прослушивания.</strong> Если у вас останутся вопросы, что-то будет непонятно или потребуется уточнение – мы созваниваемся в удобное для вас время или продолжаем разговор в переписке. Консультация не заканчивается на аудио – я остаюсь на связи, чтобы вы могли вернуться к сложным моментам и получить разъяснения.</li>
+      </ul>
+
+      <div class="consult-note">
+        <strong>Запись консультации остаётся у вас.</strong> Вы можете переслушивать её через месяц, через год или через несколько лет – и каждый раз находить новые смыслы. Психоматрица – это не одноразовый отчёт, а рабочий инструмент, который остаётся с вами. С изменением жизненных обстоятельств, возрастом и накопленным опытом одни и те же цифры начинают звучать иначе. Аудиоформат даёт вам возможность возвращаться к разбору в любой момент, когда вы чувствуете, что готовы услышать больше.
+      </div>
+    </div>
+  </div>
+
+  <div class="consult-card" data-consult>
+    <div class="consult-head">
+      <div class="consult-top">
+        <div class="consult-name">Консультация для пары</div>
+        <div class="consult-price">6.000 ₽</div>
+      </div>
+      <p class="consult-short">Анализ партнёров и их совместимости, чтобы понять, как они дополняют друг друга и где возникает напряжение.</p>
+      <span class="consult-toggle">Подробнее <span class="arrow">▼</span></span>
+    </div>
+    <div class="consult-body">
+      <p>Отношения – это не магия и не совпадение. Это взаимодействие двух уникальных личностей со своими сильными сторонами, уязвимостями и внутренними сценариями. Чтобы понять, почему возникают конфликты и как превратить напряжение в рост, нужно сначала разобраться в каждом из вас. Поэтому консультация для пары всегда начинается с индивидуального разбора.</p>
+
+      <div class="stage-title">Этап 1. Полный детальный анализ каждого партнёра.</div>
+      <ul>
+        <li>Подробный анализ психоматрицы – разбор всех цифровых ячеек.</li>
+        <li>Анализ всех линий и диагоналей – как ресурс и как ловушка.</li>
+        <li>Переходы цифр – динамика личности.</li>
+        <li>Анализ типов мышления с прогнозом на ближайшие годы.</li>
+      </ul>
+
+      <div class="stage-title">Этап 2. Анализ совместимости.</div>
+      <p>После того как я разобрал каждого из вас в отдельности, мы переходим к анализу пары как единой системы. Здесь я использую все методы цифрового психоанализа:</p>
+      <ul>
+        <li><strong>Совместимость по цифровым ячейкам</strong> – как ваши характеры, энергии и другие качества взаимодействуют друг с другом. Где возникает естественное дополнение, а где трение.</li>
+        <li><strong>Совместимость по линиям и диагоналям</strong> – целеустремлённость, семья, стабильность, самооценка, материальное обеспечение, талант, темперамент, духовность. Мы смотрим, совпадают ли ваши приоритеты или они находятся в противоречии.</li>
+        <li><strong>Совместимость по дополнительным числам</strong> – ваши цели и причины ваших действий. Вы увидите, идёте ли вы в одном направлении или ваши внутренние движущие силы работают на разные цели.</li>
+        <li><strong>Переходы в паре</strong> – как переходы одного партнёра влияют на состояние другого. Это особенно важно, потому что в паре переходы запускаются взаимно. Я покажу, где ваши «спусковые крючки» и как не провоцировать друг друга на деструктивные сценарии.</li>
+        <li><strong>Темперамент и духовность</strong> – анализ соотношения плотской и духовной диагоналей. Вы поймёте, что для вас важнее в близости: тело или душа, и совпадают ли ваши ожидания.</li>
+        <li><strong>Типы мышления в паре</strong> – как ваши мыслительные стратегии дополняют или конфликтуют друг с другом. Увидите, кто из вас чаще генерирует идеи, а кто – доводит их до реализации.</li>
+        <li><strong>Расчёт стабильности брака</strong> – бытовая и духовная стабильность в годах. Вы получите конкретные цифры: когда ожидать кризисов, как долго они длятся и как подготовиться, чтобы пройти их без разрушения союза. Это не приговор, а инструмент прогнозирования и профилактики.</li>
+      </ul>
+
+      <div class="stage-title">Итог консультации.</div>
+      <p>Вы получите:</p>
+      <ul>
+        <li><strong>Аудиозапись разбора</strong> (120–150 минут) – я последовательно провожу вас через все этапы: сначала разбор каждого партнёра, затем анализ совместимости. Всё структурировано, с пояснениями и выводами.</li>
+        <li><strong>Возможность перейти к диалогу после прослушивания.</strong> Если что-то осталось непонятным, вы задаёте вопросы – мы созваниваемся или продолжаем разговор в переписке. Консультация не ограничивается аудиоформатом.</li>
+      </ul>
+
+      <div class="consult-note">
+        <strong>Запись остаётся у вас.</strong> Вы можете возвращаться к ней через месяц, год или несколько лет. С изменением обстоятельств и возрастом одни и те же выводы начинают звучать иначе. Аудиоформат даёт вам возможность пересматривать и переосмысливать разбор в любой момент. Вы получите не вердикт «подходите / не подходите», а живую карту вашего союза. Вы увидите, где вы дополняете друг друга, где создаёте напряжение и как превратить точки трения в точки роста. Это знание позволяет перестать переделывать партнёра и начать строить отношения на реальном, а не придуманном фундаменте.
+      </div>
+    </div>
+  </div>
+
+  <div class="consult-card" data-consult>
+    <div class="consult-head">
+      <div class="consult-top">
+        <div class="consult-name">Консультация для семьи</div>
+        <div class="consult-price">10.000 ₽</div>
+      </div>
+      <p class="consult-short">Детальный анализ всех членов семьи как единой системы, где каждый влияет на каждого.</p>
+      <span class="consult-toggle">Подробнее <span class="arrow">▼</span></span>
+    </div>
+    <div class="consult-body">
+      <p>Семья – это не сумма отдельных людей. Это единая система, где каждый влияет на каждого. Чтобы понять, как наладить взаимодействие и помочь ребёнку расти без внутреннего сопротивления, сначала нужно разобраться в природе каждого члена семьи – их сильных сторонах, уязвимостях и внутренних сценариях. Поэтому консультация для семьи строится поэтапно: сначала индивидуальный разбор родителей, затем, по запросу, анализ совместимости, и завершающий этап – полный детальный анализ ребёнка с определением его направления.</p>
+
+      <div class="stage-title">Этап 1. Полный детальный анализ каждого родителя.</div>
+      <p>Консультация начинается с индивидуального разбора отца и матери. Каждый из них получает полноценный анализ личности – такой же, как в тарифе «Индивидуальная консультация».</p>
+
+      <div class="stage-title">Этап 2. Анализ совместимости супругов (по желанию).</div>
+      <p>Если в запросе семьи фигурирует вопрос совместимости – я подключаю анализ пары, описанный в тарифе «Консультация для пары».</p>
+
+      <div class="stage-title">Этап 3. Полный детальный анализ ребёнка.</div>
+      <p>Основной смысл этой консультации – помочь вам понять вашего ребёнка и выбрать правильное направление для его развития. Для каждого ребёнка я провожу полный анализ личности, аналогичный тарифу «Индивидуальная консультация». Это значит, что ребёнок получает такой же детальный разбор, как и взрослый: психоматрица, линии, переходы, тип мышления – всё это рассматривается в полном объёме, с учётом возрастных особенностей и природных задатков.</p>
+      <p>Но главная задача этого этапа – не просто описать ребёнка, а дать практические ответы на ключевые вопросы:</p>
+      <ul>
+        <li>Куда направить его энергию и способности?</li>
+        <li>В какой сфере он сможет раскрыться максимально полно?</li>
+        <li>Какая деятельность ему подходит – гуманитарная, техническая, спортивная, мастерство, теоретическая работа?</li>
+        <li>Как с ним общаться, чтобы не ломать его волю и не создавать внутреннего сопротивления?</li>
+        <li>Как развивать его сильные стороны и компенсировать слабые без давления и насилия?</li>
+      </ul>
+      <p>Вы получите понимание природы вашего ребёнка – не как набор абстрактных характеристик, а как конкретный план действий. Это знание позволяет выбирать кружки, секции, школы, подходы в общении и воспитании, исходя из его реальных задатков, а не из того, что «принято» или «модно».</p>
+
+      <div class="stage-title">Итог консультации для семьи.</div>
+      <p>Вы получите:</p>
+      <ul>
+        <li><strong>Аудиозапись разбора</strong> (время зависит от количества членов семьи) – я провожу вас через все этапы последовательно: родители по отдельности, совместимость (если нужно), затем детальный разбор каждого ребёнка. Всё структурировано, с пояснениями и конкретными рекомендациями.</li>
+        <li><strong>Возможность перейти к диалогу после прослушивания.</strong> Если что-то осталось непонятным или появились новые вопросы – мы созваниваемся или продолжаем разговор в переписке.</li>
+      </ul>
+
+      <div class="consult-note">
+        <strong>Запись остаётся у вас.</strong> Вы можете возвращаться к ней через год, через несколько лет. Дети растут, меняются обстоятельства, и одна и та же консультация начинает звучать иначе, открывая новые смыслы. Вы получите не просто разбор каждого члена семьи, а понимание семьи как живой системы. Главное – вы узнаете, куда направить ребёнка, чтобы он рос в согласии со своей природой, а не вопреки ей. Это знание спасёт вас от главной ошибки родителей – попыток сделать из ребёнка «успешного» по меркам общества вместо того, чтобы помочь ему стать собой. Семья – это не идеал, к которому нужно стремиться. Это живой организм, который можно научиться понимать и поддерживать.
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title"><span>Вопросы</span> и ответы</div>
+
+  <div class="faq">
+    <div class="faq-item">
+      <button class="faq-head" type="button">
+        <span class="faq-q">В каком формате вы проводите консультации?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-body">
+        <p>Я даю ответ в формате аудиосообщений (60–150 минут).</p>
+        <p>Это позволяет мне дать максимально глубокий разбор, не ограничивая себя по времени.</p>
+        <p>Вы получаете запись, которую можно переслушивать в любое время. Вы слушаете в удобном темпе, делаете паузы и возвращаетесь к важным моментам.</p>
+        <p><strong>Важно:</strong> после прослушивания моих сообщений у вас всё равно есть возможность перейти к диалогу по звонку или в переписке.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-head" type="button">
+        <span class="faq-q">Что требуется для проведения консультации?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-body">
+        <p>Для того чтобы разбор получился максимально полезным и глубоким, мне необходим «фундамент».</p>
+        <p>— Пришлите дату рождения в формате дд/мм/гггг.</p>
+        <p>— Пришлите свой основной вопрос или проблему, которая волнует вас на данный момент больше всего.</p>
+        <p>— Напишите краткую информацию о себе. Кем вы работаете, в каких отношениях находитесь, что для вас сейчас важно. Это поможет мне лучше понять контекст и дать более точные рекомендации.</p>
+        <p>Свяжитесь со мной одним из удобных способов, например через мой телеграм-канал: <a href="https://t.me/aleksandr_numer" target="_blank" rel="noopener">https://t.me/aleksandr_numer</a>.</p>
+        <p><strong>Почему это важно:</strong> мои консультации – это не фиксированные шаблоны. Я адаптирую анализ под вашу ситуацию. Если вы просто пришлёте дату рождения без контекста – я всё равно смогу дать общую картину. Но если вы поделитесь своей историей – разбор получится более точным и практичным.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-head" type="button">
+        <span class="faq-q">Консультируете ли вы людей, проживающих не в России?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-body">
+        <p>Да, я консультирую всех русскоговорящих жителей нашей планеты.</p>
+        <p>Оплата, как правило, происходит через сервис Boosty. Для этого вам потребуется быстрая регистрация на сервисе.</p>
+        <p><strong>Важно:</strong> в индивидуальном порядке можем обсудить и другие способы. Я всегда открыт к диалогу.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-head" type="button">
+        <span class="faq-q">Вы можете составить натальную карту или матрицу судьбы?</span>
+        <span class="faq-icon">+</span>
+      </button>
+      <div class="faq-body">
+        <p>Нет. Я работаю строго по системе «Цифрового психоанализа Александрова».</p>
+        <p>Я не практикую астрологию, таро, ведическую нумерологию, сюцай, нумерологию таро и прочие эзотерические направления, так как отношусь к ним скептически или считаю их неуместными для использования в консультациях.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button class="reset-btn" id="c-reset-btn" type="button">Сбросить</button>
+
+<script>
+(function() {
+  var tg = window.Telegram && window.Telegram.WebApp;
+  if (!tg) return;
+  try {
+    tg.ready();
+    tg.expand();
+    if (tg.setHeaderColor) tg.setHeaderColor('#0a1128');
+    if (tg.setBackgroundColor) tg.setBackgroundColor('#0a1128');
+    if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+  } catch (e) {}
+})();
+
+(function() {
+  "use strict";
+
+  var ONES_IMPORTANT = 'Характер это самая гибкая часть психоматрицы. Он меняется под влиянием обстоятельств, окружения и вашего собственного выбора. Восьмёрки в матрице придают характеру существенную пластичность. Перед вами не застывший портрет, а живой человек, способный меняться.';
+
+  var TWOS_IMPORTANT = 'Обратите внимание на четвёрки в психоматрице. Они отвечают за здоровье и физический потенциал. Четвёрки способны компенсировать дефицит энергии – человек берёт силу из тела. И наоборот – избыток энергии может укрепить здоровье.';
+
+  var onesData = {
+    1: {
+      short: 'Противоречивое сочетание внутренней неуверенности и внешнего желания казаться волевым человеком. Внутри часто бывает страшно принимать решения, поэтому ответственность хочется переложить на других. Но чтобы скрыть эту хрупкость, человек надевает маску уверенности, может горячо спорить даже в тех вопросах, где не компетентен, или повторять одни и те же истории для поддержания своего статуса. Это защитный механизм психики, который помогает выживать и встраиваться в социум.',
+      plus: 'Внутреннее стремление к росту, способность встраиваться в коллектив, умение находить поддержку извне.',
+      minus: 'Избегание окончательных решений, спор ради спора, противоречие между желанием казаться сильным и реальной усталостью от давления.',
+      rec: 'Признайте своё право на уязвимость – вам не нужно всегда казаться железным. Ищите опору в надёжной структуре, в команде или рядом с мудрыми людьми. Ставьте маленькие, реальные цели, чтобы через их достижение обрести подлинную уверенность. Не тратьте силы на пустые споры – берегите энергию для реальных дел.'
+    },
+    2: {
+      short: 'Мягкий и уступчивый характер. Человек очень любит похвалу и готов зарабатывать её добрыми делами, помощью и умением слушать. Он легко входит в любую компанию, не давит на окружающих и старается избегать конфликтов. Из-за этого иногда может занижать свои цели или уступать там, где стоило бы проявить твёрдость. Однако при наличии в расчёте сильных пятёрок или восьмёрок такие люди становятся непримиримыми правдоискателями и совершенно не терпят лжи.',
+      plus: 'Отзывчивость, коммуникабельность, эмпатия, умение слушать и поддерживать других.',
+      minus: 'Зависимость от чужой похвалы, заниженная самооценка, боязнь конфликтов, нетвёрдость в отстаивании границ.',
+      rec: 'Учитесь хвалить себя самостоятельно, не дожидаясь одобрения со стороны. Похвала для вас – это жизненное топливо, поэтому окружайте себя людьми, которые умеют ценить ваши старания. Тренируйтесь отстаивать свою точку зрения мягко, но уверенно. Ставьте цели чуть выше, чем кажется комфортным – у вас достаточно сил для их достижения.'
+    },
+    3: {
+      short: '«Золотая середина» в проявлении воли. Человек умеет находить общий язык почти с кем угодно: он гибок, дипломатичен и в спокойном состоянии добр, терпим и безотказен в помощи. Но главная особенность этого характера – спонтанность. В критический момент, когда ситуация того требует, человек способен на неожиданный и очень мощный волевой поступок, которого от него никто не ждёт. Эта внутренняя сила дремлет до поры до времени, но всегда готова включиться.',
+      plus: 'Коммуникабельность, адаптивность, природная доброта, способность к внезапному и точному волевому рывку.',
+      minus: 'Непредсказуемость реакций, периоды безвольности, сменяющиеся вспышками активности.',
+      rec: 'Примите свою волнообразную природу: периоды спокойной уступчивости сменяются моментами высокой концентрации и силы. Это нормально. Не корите себя за периоды мягкости – в это время вы накапливаете ресурс. Используйте свой дар дипломатии для выстраивания крепких связей, но в критические моменты смело опирайтесь на свою скрытую решительность.'
+    },
+    4: {
+      short: 'Сильная целеустремлённость и лидерское начало. Человек принимает решения быстро и редко от них отказывается. Он ставит перед собой цель и лишь потом начинает соизмерять её со своими возможностями. У него собственное, очень мощное волевое начало, которое не позволяет быть проводником чужой воли. При всей своей внутренней твёрдости и решительности, эти люди обычно очень аккуратны и тактичны в повседневном общении с окружающими.',
+      plus: 'Сила воли, решительность, лидерство, способность вести за собой, тактичность.',
+      minus: 'Риск достижения навязанных извне целей, нежелание соизмерять силы до старта, неприятие любого давления.',
+      rec: 'Перед тем как броситься на амбразуру, остановитесь и честно спросите себя: это действительно моя цель или кто-то навязал её мне? Выбрав истинное направление, не занижайте планку – идите до конца. Помните, что на вас нельзя давить, и вы это знаете. Используйте свою силу для защиты своих границ и помощи тем, кто слабее, но избегайте жёсткости там, где достаточно простого разговора.'
+    },
+    5: {
+      short: 'Максимальная сила характера, которая в крайних проявлениях может перерастать в деспотизм. Человек не терпит подчинения и всегда продавливает свою волю. В моменты раздражения может быть жёстким и даже опасным для оппонентов. Однако, если в расчёте есть восьмёрки, в спокойном состоянии такой человек способен на невероятную мягкость, терпимость, доброту и великодушие. Это личность крайностей: либо безграничная щедрость, либо железный кулак.',
+      plus: 'Колоссальная воля, харизма, масштабность личности, способность вести за собой массы.',
+      minus: 'Склонность к подавлению окружающих, взрывоопасность, нетерпимость к чужой слабости.',
+      rec: 'Главная мудрость для вас – помнить, что рядом находятся живые люди со своими слабостями. Избегайте прямой власти над другими – это путь к внутренним потерям. Направляйте свою колоссальную энергию в науку, искусство, бизнес или мастерство, где нужно проявлять власть над обстоятельствами и материалом, а не над людьми. Учитесь сдержанности – это признак истинной силы.'
+    },
+    6: {
+      short: 'Перегрузка характером. Человек живёт исключительно по своим внутренним законам. Чужие правила и авторитеты для него просто не существуют, хотя он может уважать право других на их наличие. Максимальная активизация этой перегрузки сильно травмирует самого человека, поскольку вынуждает его разрушать собственный, невидимый для окружающих мир. Люди с таким количеством единиц очень страдают от своей перегрузки и плохо переносят рядом с собой других лидеров и властных людей.',
+      plus: 'Абсолютная самодостаточность, внутренняя автономность, полная независимость от чужого мнения.',
+      minus: 'Внутреннее страдание от перегрузки, разрушение собственного мира при внешнем давлении, неприятие любых рамок.',
+      rec: 'Будьте с собой максимально деликатны. Не ставьте перед собой сразу несколько глобальных целей – выберите одну, иначе перегрузка затормозит любое движение вперёд. Избегайте окружения, где вам пытаются навязать жёсткие рамки или где много других властных людей. Ищите выход своей колоссальной энергии через физическое действие, творчество или уединённую работу, чтобы не разрушать себя изнутри.'
+    }
+  };
+
+  var onesZeroData = {
+    short: 'От природы волевой стержень не выражен. Человеку комфортнее, когда рядом есть тот, кто берёт на себя ответственность, направляет и принимает решения. Это не слабость, а природная предрасположенность быть надёжным исполнителем и помощником. Такой человек не стремится к лидерству, ему важно найти своё место в структуре или рядом с сильным наставником, где его мягкость и готовность следовать будут цениться.',
+    plus: 'Гибкость, отсутствие конфликтности, умение слушать, способность быть надёжной опорой для лидера.',
+    minus: 'Трудности с самостоятельным принятием решений, избегание ответственности, зависимость от чужого мнения.',
+    rec: 'Не требуйте от себя немедленной железной воли. Найдите среду, коллектив или наставника, на которых можно опереться. Развивайте характер постепенно: ставьте перед собой небольшие, достижимые цели и обязательно хвалите себя за их выполнение. Воля – это мышца, её можно натренировать шаг за шагом.'
+  };
+
+  var twosData = {
+    0: {
+      short: 'От природы у человека небольшой запас биоэнергии. Ему сложно долго находиться в толпе, поддерживать активное общение или инициировать новые дела. Это не лень и не слабость – это объективная нехватка внутреннего ресурса для отдачи вовне. Человек быстро истощается и вынужден беречь свои силы, избегая ситуаций, требующих постоянного эмоционального вовлечения. Ему жизненно необходимо уединение и тишина для восстановления.',
+      plus: 'Глубокий внутренний мир, способность к кропотливой уединённой работе, тонкая чувствительность.',
+      minus: 'Быстрое истощение в контактах, избегание социальной активности, трудности с проявлением инициативы.',
+      rec: 'Не заставляйте себя быть душой компании – вам это не подходит. Выбирайте профессии и хобби, где не требуется постоянная отдача энергии людям. Осознанно занимайтесь накоплением сил: проводите время на природе, практикуйте дыхательные техники, следите за питанием и сном. Ваш ресурс восстанавливается в тишине и покое – позвольте себе это право.'
+    },
+    1: {
+      short: 'Энергии хватает на повседневные дела, но для масштабных свершений её нужно осознанно накапливать. Человеку бывает трудно долго поддерживать активный диалог или браться за несколько задач одновременно. Любое усилие даётся с трудом, поэтому часто возникает желание отложить дела на потом. При этом человек может не осознавать своей усталости и пытаться казаться более активным, чем есть на самом деле, чтобы соответствовать ожиданиям окружающих.',
+      plus: 'Способность к базовому контакту, наличие стартовой инициативы, умение беречь себя.',
+      minus: 'Быстрая утомляемость, склонность к лени, избегание длительных нагрузок.',
+      rec: 'Не сравнивайте свой темп с темпом более энергичных людей – у вас свой ритм. Беритесь за одно дело за раз и обязательно планируйте отдых до того, как наступит полное истощение. Развивайте энергию через заботу о теле: прогулки, умеренный спорт, режим дня. Ищите поддержку и похвалу у близких – тёплые слова отлично подпитывают ваш энергетический резерв.'
+    },
+    2: {
+      short: 'Гармоничная норма энергии. Это прекрасный, устойчивый ресурс, который позволяет человеку легко общаться, ставить цели и достигать их без надрыва. Такой человек не склонен к лени, выдерживает монотонный труд и умеет работать с людьми. Из него получается отличный рассказчик, лектор или специалист в сфере «человек-человек». Энергии достаточно, чтобы быть активным, но при этом не перегорать и не перегружать окружающих.',
+      plus: 'Общительность, выносливость, целеустремлённость, умение работать с людьми и информацией.',
+      minus: 'При гармоничной норме явные недостатки отсутствуют, но важно не разбазаривать силы на пустяки.',
+      rec: 'Смело ставьте перед собой значимые цели – у вас достаточно сил для их реализации. Развивайте навыки общения, ораторское мастерство или преподавание. Направляйте свою энергию в созидание и помощь другим. Не позволяйте окружающим злоупотреблять вашим терпением: если вас долго испытывать на прочность, вы способны дать жёсткий отпор. Берегите свой ресурс и тратьте его на то, что действительно важно.'
+    },
+    3: {
+      short: 'Сильная, но нестабильная энергия, которую часто называют экстрасенсорной. Человек живёт по принципу синусоиды: то он способен свернуть горы и зарядить своим энтузиазмом всех вокруг, то внезапно уходит в себя, закрывается от мира и не желает ни с кем делиться проблемами. В моменты спада эмоции выходят из-под контроля, и любое давление со стороны вызывает взрыв. При этом человек умеет искренне помогать другим, но делает это дозированно.',
+      plus: 'Мощный потенциал для рывков, интуитивные способности, умение помогать другим, яркость.',
+      minus: 'Рваный ритм жизни, замкнутость в периоды спада, непредсказуемость для окружающих.',
+      rec: 'Планируйте свою жизнь волнами: за периодом высокой активности должен следовать обязательный отдых. Не корите себя за периоды замкнутости – это время, когда ваша психика восстанавливается. Следите за своими мыслями: вы обладаете сильной саморегуляцией, и если начнёте программировать себя на болезнь, организм послушается. Помогайте другим с добротой и лаской, но помните, что ваш ресурс на отдачу ограничен парой дней, после чего нужно уходить в тишину.'
+    },
+    4: {
+      short: 'Очень сильная энергия, признак истинного энергетического донора. Человеку жизненно необходимо активно делиться своим ресурсом с другими или тратить его на масштабные дела: проекты, путешествия, организацию мероприятий. Он не склонен к лени, выдерживает колоссальные нагрузки и способен вести за собой массы. Окружающие часто тянутся к такому человеку, чувствуя его мощную и тёплую энергетику, которая способна исцелять и вдохновлять.',
+      plus: 'Огромный запас сил, организаторские способности, выносливость, лидерство, способность отдавать.',
+      minus: 'Непонимание чужой усталости, риск задавить окружающих своим темпом, нетерпеливость.',
+      rec: 'Обязательно направляйте свою энергию в большое дело, иначе она начнёт разрушать вас изнутри. Путешествуйте, создавайте проекты, помогайте людям. Но всегда помните важное правило: окружающие вас люди далеко не такие энергичные, как вы. Будьте тактичны, не торопите других и не требуйте от них вашего темпа. Учитесь делегировать и бережно относиться к чужому ритму жизни.'
+    }
+  };
+
+  function sumDigits(n) {
+    if (n === undefined || n === null) return 0;
+    var s = String(Math.abs(n));
+    var t = 0;
+    for (var i = 0; i < s.length; i++) t += parseInt(s.charAt(i), 10);
+    return t;
+  }
+
+  function getFirstDigit(s) {
+    if (!s) return 0;
+    return parseInt(s.charAt(0), 10);
+  }
+
+  function parseDate(str) {
+    var clean = str.replace(/[^0-9]/g, '');
+    if (clean.length !== 8) return null;
+    var day = parseInt(clean.substring(0, 2), 10);
+    var month = parseInt(clean.substring(2, 4), 10);
+    var year = parseInt(clean.substring(4, 8), 10);
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+    if (day < 1 || day > 31) return null;
+    if (month < 1 || month > 12) return null;
+    return { day: day, month: month, year: year };
+  }
+
+  function calcNumbers(d, m, y) {
+    var sum = sumDigits(d) + sumDigits(m) + sumDigits(y);
+    var first = sum;
+    var second = sumDigits(first);
+    var ds = String(d) + String(m) + String(y);
+    var fd = getFirstDigit(ds);
+    var third = first - 2 * fd;
+    var fourth = sumDigits(third);
+    return { first: first, second: second, third: third, fourth: fourth };
+  }
+
+  function getCounts(d, m, y, extra) {
+    var c = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0 };
+    function add(n) {
+      if (n === undefined || n === null || isNaN(n)) return;
+      var s = String(Math.abs(n));
+      for (var i = 0; i < s.length; i++) {
+        var dig = parseInt(s.charAt(i), 10);
+        if (!isNaN(dig)) c[dig] = (c[dig] || 0) + 1;
+      }
+    }
+    add(d); add(m); add(y);
+    add(extra.first); add(extra.second); add(extra.third); add(extra.fourth);
+    return c;
+  }
+
+  function renderCount(c, digit) {
+    var v = c[digit] || 0;
+    return v === 0 ? '—' : String(digit).repeat(v);
+  }
+
+  function getOnesData(count) {
+    if (count <= 0) return onesZeroData;
+    if (count >= 6) return onesData[6];
+    return onesData[count];
+  }
+
+  function getTwosData(count) {
+    if (count <= 0) return twosData[0];
+    if (count >= 4) return twosData[4];
+    return twosData[count];
+  }
+
+  function onesTitle(count) {
+    if (count <= 0) return 'Характер «1-нет»';
+    if (count >= 6) return 'Характер «111111 и более»';
+    return 'Характер «' + new Array(count + 1).join('1') + '»';
+  }
+
+  function twosTitle(count) {
+    if (count <= 0) return 'Энергия «2-нет»';
+    if (count >= 4) return 'Энергия «2222 и более»';
+    return 'Энергия «' + new Array(count + 1).join('2') + '»';
+  }
+
+  function renderAnalysisBlock(headerId, textId, title, data, important) {
+    var header = document.getElementById(headerId);
+    var textBlock = document.getElementById(textId);
+    if (!header || !textBlock || !data) return;
+
+    header.textContent = title;
+
+    var html = '';
+    html += '<p>' + data.short + '</p>';
+    html += '<button class="toggle-btn" type="button">Подробнее ▼</button>';
+    html += '<div class="full-desc">';
+    html += '<p><strong>Преимущества:</strong> ' + data.plus + '</p>';
+    html += '<p><strong>Возможные недостатки:</strong> ' + data.minus + '</p>';
+    html += '<p><strong>Рекомендации:</strong> ' + data.rec + '</p>';
+    html += '<p><strong>Важно:</strong> ' + important + '</p>';
+    html += '</div>';
+
+    textBlock.innerHTML = html;
+
+    var btn = textBlock.querySelector('.toggle-btn');
+    var full = textBlock.querySelector('.full-desc');
+    if (btn && full) {
+      btn.addEventListener('click', function() {
+        if (full.classList.contains('open')) {
+          full.classList.remove('open');
+          btn.innerHTML = 'Подробнее ▼';
+        } else {
+          full.classList.add('open');
+          btn.innerHTML = 'Подробнее ▲';
+        }
+      });
+    }
+  }
+
+  function calculate() {
+    var inp = document.getElementById('c-date');
+    var res = document.getElementById('c-result');
+    var note = document.getElementById('c-partial-note');
+    var loading = document.getElementById('c-loading');
+    var resetBtn = document.getElementById('c-reset-btn');
+
+    if (!inp || !res) return;
+
+    var ds = inp.value.trim();
+    var parsed = parseDate(ds);
+    if (!parsed) {
+      alert('Введите дату в формате ДД.ММ.ГГГГ (например, 15.04.1972)');
+      return;
+    }
+
+    var d = parsed.day, m = parsed.month, y = parsed.year;
+
+    if (loading) loading.classList.add('show');
+    res.classList.remove('show');
+    if (resetBtn) resetBtn.classList.remove('show');
+
+    setTimeout(function() {
+      try {
+        var extra = calcNumbers(d, m, y);
+        var cnt = getCounts(d, m, y, extra);
+
+        var absThird = Math.abs(extra.third);
+        var absFourth = Math.abs(extra.fourth);
+        var extraStr = extra.first + ' · ' + extra.second + ' · ' + absThird + ' · ' + absFourth;
+        document.getElementById('c-extra-digits').textContent = extraStr;
+
+        for (var i = 1; i <= 9; i++) {
+          var cell = document.getElementById('c-' + i);
+          if (!cell) continue;
+          var disp = renderCount(cnt, i);
+          var sp = cell.querySelector('.digit');
+          if (sp) sp.textContent = disp;
+          if (disp === '—') cell.classList.add('empty');
+          else cell.classList.remove('empty');
+        }
+
+        var onesCount = cnt[1] || 0;
+        renderAnalysisBlock('c-ones-digits', 'c-ones-text', onesTitle(onesCount), getOnesData(onesCount), ONES_IMPORTANT);
+
+        var twosCount = cnt[2] || 0;
+        renderAnalysisBlock('c-twos-digits', 'c-twos-text', twosTitle(twosCount), getTwosData(twosCount), TWOS_IMPORTANT);
+
+        res.classList.add('show');
+        if (note) note.classList.add('show');
+        if (loading) loading.classList.remove('show');
+        if (resetBtn) resetBtn.classList.add('show');
+
+      } catch (e) {
+        if (loading) loading.classList.remove('show');
+        alert('Ошибка: ' + e.message);
+        console.error(e);
+      }
+    }, 450);
+  }
+
+  function initInput() {
+    var inp = document.getElementById('c-date');
+    if (!inp) return;
+    inp.addEventListener('input', function() {
+      var v = this.value.replace(/[^0-9]/g, '');
+      var f = '';
+      if (v.length > 0) f += v.substring(0, 2);
+      if (v.length >= 3) f += '.' + v.substring(2, 4);
+      if (v.length >= 5) f += '.' + v.substring(4, 8);
+      this.value = f;
+    });
+    inp.addEventListener('keydown', function(e) {
+      var allow = ['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
+      if (allow.indexOf(e.key) !== -1) return;
+      if (!/^[0-9]$/.test(e.key)) e.preventDefault();
+    });
+  }
+
+  function initSections() {
+    var headers = document.querySelectorAll('.section-header');
+    for (var i = 0; i < headers.length; i++) {
+      headers[i].addEventListener('click', function() {
+        var section = this.closest('.section');
+        if (!section) return;
+        section.classList.toggle('open');
+      });
+    }
+  }
+
+  function initFaq() {
+    var heads = document.querySelectorAll('.faq-head');
+    for (var i = 0; i < heads.length; i++) {
+      heads[i].addEventListener('click', function() {
+        var item = this.closest('.faq-item');
+        if (!item) return;
+        item.classList.toggle('open');
+      });
+    }
+  }
+
+  function initConsultations() {
+    var heads = document.querySelectorAll('.consult-head');
+    for (var i = 0; i < heads.length; i++) {
+      heads[i].addEventListener('click', function() {
+        var card = this.closest('.consult-card');
+        if (!card) return;
+        card.classList.toggle('open');
+      });
+    }
+  }
+
+  function initReset() {
+    var btn = document.getElementById('c-reset-btn');
+    var inp = document.getElementById('c-date');
+    var res = document.getElementById('c-result');
+    var note = document.getElementById('c-partial-note');
+    var loading = document.getElementById('c-loading');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+      if (res) {
+        res.classList.remove('show');
+        var sections = res.querySelectorAll('.section');
+        for (var i = 0; i < sections.length; i++) sections[i].classList.remove('open');
+      }
+      if (note) note.classList.remove('show');
+      if (loading) loading.classList.remove('show');
+      if (inp) inp.value = '';
+      btn.classList.remove('show');
+      window.scrollTo({top: 0, behavior: 'smooth'});
+      setTimeout(function(){ if (inp) inp.focus(); }, 300);
+    });
+  }
+
+  function init() {
+    initInput();
+    initSections();
+    initFaq();
+    initConsultations();
+    initReset();
+
+    var btn = document.getElementById('c-calc-btn');
+    if (btn) btn.addEventListener('click', calculate);
+
+    setTimeout(calculate, 150);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
